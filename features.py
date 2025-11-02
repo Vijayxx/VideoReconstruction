@@ -43,7 +43,7 @@ def prepare_features(frames: Sequence[np.ndarray]) -> List[FrameFeatures]:
     Precompute classical descriptors for each downscaled frame.
     """
 
-    orb = cv2.ORB_create(nfeatures=500)
+    orb = cv2.ORB_create(nfeatures=1000)
     features: List[FrameFeatures] = []
     for frame in frames:
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
