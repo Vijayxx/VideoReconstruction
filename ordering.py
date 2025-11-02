@@ -1,14 +1,3 @@
-"""
-Path-construction heuristics for reordering shuffled video frames.
-
-The module supplies three steps:
-
-1. Identify a plausible start/end pair using the farthest distance heuristic.
-2. Build a complete path via bi-directional greedy growth.
-3. Refine the order with (optional band-limited) 2-opt swaps to reduce total
-   path length.
-"""
-
 from __future__ import annotations
 
 from typing import Iterable, Sequence, Tuple
@@ -17,10 +6,6 @@ import numpy as np
 
 
 def farthest_pair(distance: np.ndarray) -> Tuple[int, int]:
-    """
-    Return the indices of the farthest-apart frames under ``distance``.
-    """
-
     if distance.ndim != 2 or distance.shape[0] != distance.shape[1]:
         raise ValueError("Distance matrix must be square.")
     n = distance.shape[0]
@@ -32,11 +17,6 @@ def farthest_pair(distance: np.ndarray) -> Tuple[int, int]:
 
 
 def bidirectional_greedy(distance: np.ndarray, start_pair: Tuple[int, int]) -> np.ndarray:
-    """
-    Build an ordering by repeatedly attaching the best-scoring frame to either
-    end of the current path.
-    """
-
     n = distance.shape[0]
     remaining = set(range(n))
     order = [start_pair[0], start_pair[1]]
@@ -81,23 +61,6 @@ def two_opt(
     max_iter: int = 20000,
     band: int = 0,
 ) -> np.ndarray:
-    """
-    Classic 2-opt refinement for a path (open tour).
-
-    Parameters
-    ----------
-    order:
-        Initial ordering (sequence of frame indices).
-    distance:
-        Symmetric distance matrix.
-    max_iter:
-        Maximum number of swap evaluations. The algorithm stops earlier when no
-        improvement is found.
-    band:
-        Optional band-limit (in positions) restricting which segment pairs can
-        be swapped. ``0`` disables banding and evaluates all pairs.
-    """
-
     n = len(order)
     if n < 4:
         return np.asarray(order, dtype=int)
@@ -128,10 +91,6 @@ def two_opt(
 
 
 def path_cost(order: Iterable[int], distance: np.ndarray) -> float:
-    """
-    Total distance cost of consecutive edges along ``order``.
-    """
-
     total = 0.0
     order = list(order)
     for a, b in zip(order[:-1], order[1:]):

@@ -1,19 +1,3 @@
-"""
-Command-line orchestration for classical jumbled-frame reconstruction.
-
-Pipeline overview:
-
-1. Decode all frames and create a downscaled working set.
-2. Precompute classical frame descriptors (SSIM-ready grayscale, HSV histogram,
-   ORB descriptors).
-3. Evaluate all pairwise similarities in parallel and fuse them with
-   user-provided weights.
-4. Solve a travelling-salesperson-style path problem via a farthest-pair seed,
-   bi-directional greedy growth, and 2-opt refinement.
-5. Reorder the original-resolution frames, render the recovered video at 30 fps
-   exactly, and emit logging artefacts.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -62,15 +46,6 @@ def parse_args() -> argparse.Namespace:
 
 
 def _front_loaded_cost(order: np.ndarray, distance: np.ndarray) -> float:
-    """
-    Heuristic cost that emphasises keeping early transitions smooth.
-
-    Large distances near the start of the sequence are penalised more heavily
-    than those near the end. This bias encourages the recovered temporal order
-    to begin with gentle frame-to-frame changes, which empirically matches how
-    most captures start.
-    """
-
     if len(order) < 2:
         return 0.0
     weights = np.linspace(len(order) - 1, 1.0, len(order) - 1, dtype=np.float32)

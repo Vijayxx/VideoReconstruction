@@ -8,7 +8,7 @@ This project reconstructs the correct chronological order of a shuffled single-s
 2. **Multi-Cue Similarity** — For every pair of downscaled frames:
    - Structural Similarity Index (SSIM) on grayscale images.
    - HSV colour histogram intersection with 32×32×32 bins (L1-normalised).
-   - ORB keypoints (500 features) matched with BF-Hamming and Lowe’s 0.75 ratio test.
+   - ORB keypoints (1000 features) matched with BF-Hamming and Lowe’s 0.75 ratio test.
    - Fuse the scores with weights (`w_ssim + w_hist + w_orb = 1`).
 3. **Path Construction** — Treat the problem as an open TSP:
    - Seed with the farthest pair of frames (largest fused distance).
@@ -55,3 +55,10 @@ Key flags:
 - `logs/similarity_report.csv` — optional fused similarity matrix (set with `--similarity_report`).
 
 The script prints the **average consecutive-frame similarity**, which provides a quick sanity check for temporal smoothness. Higher values indicate smoother recovered pacing.
+
+## Implementation Notes
+
+- `reconstruct.py` orchestrates the CLI, validates weight sums, and decides whether to flip the recovered path using a front-loaded distance heuristic so early transitions stay smooth.
+- `features.py` caches per-frame SSIM-ready grayscale images, HSV histograms, and ORB descriptors so multiprocessing workers reuse data instead of recomputing it.
+- `ordering.py` exposes the farthest-pair seed, bi-directional greedy growth, and 2-opt refinement stages used to assemble the timeline.
+- `io_utils.py` encapsulates frame decoding, downscaling, video rendering, and export helpers (frame order CSV, similarity report, timing JSON).

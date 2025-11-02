@@ -1,17 +1,3 @@
-"""
-Classical feature computation and fused similarity scoring.
-
-Each frame is represented by interpretable cues:
-
-* Structural Similarity Index (SSIM) on downscaled grayscale frames.
-* HSV colour histogram intersection (32 bins per channel).
-* ORB keypoint match ratio (Lowe 0.75 threshold, BF-Hamming).
-
-Pairwise similarities are fused with CLI-controlled weights. Feature extraction
-is separated from pairwise matching so that multiprocessing workers reuse the
-cached descriptors instead of recomputing them.
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -30,19 +16,13 @@ _BF_MATCHER: cv2.BFMatcher | None = None
 
 @dataclass
 class FrameFeatures:
-    """Container for precomputed classical cues."""
-
-    gray: np.ndarray  # uint8 grayscale working image
-    hsv_hist: np.ndarray  # L1-normalised histogram (flattened)
-    descriptors: Optional[np.ndarray]  # ORB descriptors (uint8) or None
+    gray: np.ndarray
+    hsv_hist: np.ndarray
+    descriptors: Optional[np.ndarray]
     descriptor_count: int
 
 
 def prepare_features(frames: Sequence[np.ndarray]) -> List[FrameFeatures]:
-    """
-    Precompute classical descriptors for each downscaled frame.
-    """
-
     orb = cv2.ORB_create(nfeatures=1000)
     features: List[FrameFeatures] = []
     for frame in frames:
@@ -83,10 +63,6 @@ def compute_similarity_matrix(
     weight_orb: float,
     workers: Optional[int] = None,
 ) -> np.ndarray:
-    """
-    Compute the fused similarity matrix across all frames.
-    """
-
     validate_weights(weight_ssim, weight_hist, weight_orb)
 
     n = len(features)
@@ -126,10 +102,6 @@ def compute_similarity_matrix(
 
 
 def validate_weights(w_ssim: float, w_hist: float, w_orb: float) -> None:
-    """
-    Ensure that similarity weights form a convex combination.
-    """
-
     total = w_ssim + w_hist + w_orb
     if not np.isclose(total, 1.0, atol=1e-6):
         raise ValueError("Similarity weights must sum to 1.0.")
@@ -209,4 +181,3 @@ def _orb_similarity(
     denom = max(1, min(fi.descriptor_count, fj.descriptor_count))
     score = good / float(denom)
     return float(np.clip(score, 0.0, 1.0))
-
